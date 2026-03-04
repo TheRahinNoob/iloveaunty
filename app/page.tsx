@@ -24,57 +24,6 @@ function clamp(n: number, min: number, max: number) {
 }
 
 /* =========================
-   Slot Reel (casino vibe)
-========================= */
-function SlotReel({
-  label,
-  value,
-  spinning,
-}: {
-  label: string;
-  value: string;
-  spinning: boolean;
-}) {
-  return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.06] backdrop-blur-xl">
-      <div className="flex items-center justify-between px-3 py-2">
-        <div className="text-[11px] font-medium text-white/70">{label}</div>
-        <div className={cn("text-[11px] text-white/50", spinning && "animate-pulse")}>
-          {spinning ? "spinning…" : "locked"}
-        </div>
-      </div>
-
-      <div className="relative px-3 pb-3">
-        <div className="relative h-12 overflow-hidden rounded-xl border border-white/10 bg-black/25">
-          {/* glow (must NOT block input anywhere else) */}
-          <div className="pointer-events-none absolute inset-0 opacity-50 [background:radial-gradient(ellipse_at_center,rgba(255,255,255,0.12),transparent_55%)]" />
-
-          <AnimatePresence mode="popLayout">
-            <motion.div
-              key={value + (spinning ? "-spin" : "-lock")}
-              initial={{ y: -18, opacity: 0, filter: "blur(6px)" }}
-              animate={{
-                y: 0,
-                opacity: 1,
-                filter: spinning ? "blur(2px)" : "blur(0px)",
-              }}
-              exit={{ y: 18, opacity: 0, filter: "blur(6px)" }}
-              transition={{ duration: 0.16, ease: "easeOut" }}
-              className="absolute inset-0 flex items-center justify-center px-3 text-sm font-semibold tracking-wide text-white"
-            >
-              {value}
-            </motion.div>
-          </AnimatePresence>
-
-          {/* scanline */}
-          <div className="pointer-events-none absolute inset-0 opacity-[0.12] [background-image:linear-gradient(rgba(255,255,255,0.20)_1px,transparent_1px)] [background-size:100%_10px]" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* =========================
    UI bits
 ========================= */
 function GlassPanel({
@@ -87,34 +36,79 @@ function GlassPanel({
   return (
     <div
       className={cn(
-        // IMPORTANT: relative + overflow-hidden so inner glows don't escape,
-        // and input remains interactive due to pointer-events-none overlays.
-        "relative overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.06] p-4 backdrop-blur-2xl",
+        "relative overflow-hidden rounded-[26px] border border-white/10 bg-white/[0.06] backdrop-blur-2xl",
         "shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_30px_90px_rgba(0,0,0,0.45)]",
         className
       )}
     >
-      {/* overlays must never capture pointer events */}
+      {/* overlays never capture input */}
       <div className="pointer-events-none absolute inset-0 opacity-60 [background:radial-gradient(circle_at_20%_15%,rgba(255,255,255,0.14),transparent_45%)]" />
-      <div className="pointer-events-none absolute inset-0 rounded-[28px] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]" />
-
-      {/* make sure content sits above overlays */}
+      <div className="pointer-events-none absolute inset-0 rounded-[26px] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]" />
       <div className="relative z-10 h-full">{children}</div>
     </div>
   );
 }
 
-function Pill({ title, items }: { title: string; items: string[] }) {
+function MiniChip({
+  active,
+  title,
+  subtitle,
+  onClick,
+}: {
+  active: boolean;
+  title: string;
+  subtitle: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "shrink-0 rounded-2xl border px-3 py-2 text-left transition",
+        active ? "border-white/25 bg-white/10" : "border-white/10 bg-white/[0.05] hover:bg-white/10"
+      )}
+    >
+      <div className="text-[10px] text-white/50">{subtitle}</div>
+      <div className={cn("mt-0.5 text-[12px] font-medium", title ? "text-white/90" : "text-white/35")}>
+        {title || "Empty"}
+      </div>
+    </button>
+  );
+}
+
+function SlotCard({
+  title,
+  role,
+  names,
+  spinning,
+}: {
+  title: string;
+  role: string;
+  names: string[];
+  spinning: boolean;
+}) {
   return (
     <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
-      <div className="text-[11px] font-semibold text-white/75">{title}</div>
-      <div className="mt-2 space-y-1.5">
-        {items.map((it, i) => (
+      <div className="flex items-center justify-between">
+        <div className="text-[12px] font-semibold text-white/85">{title}</div>
+        <div className={cn("text-[11px] text-white/55", spinning && "animate-pulse")}>{role}</div>
+      </div>
+      <div className="mt-2 space-y-2">
+        {names.map((n, i) => (
           <div
             key={i}
-            className="rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-[12px] text-white/85"
+            className="relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2"
           >
-            {it}
+            <div className="pointer-events-none absolute inset-0 opacity-30 [background:radial-gradient(ellipse_at_center,rgba(255,255,255,0.12),transparent_60%)]" />
+            <motion.div
+              key={n + (spinning ? "-spin" : "-lock")}
+              initial={{ y: -10, opacity: 0, filter: "blur(6px)" }}
+              animate={{ y: 0, opacity: 1, filter: spinning ? "blur(2px)" : "blur(0px)" }}
+              transition={{ duration: 0.14, ease: "easeOut" }}
+              className="relative z-10 text-[13px] font-semibold text-white"
+            >
+              {n || "—"}
+            </motion.div>
           </div>
         ))}
       </div>
@@ -130,12 +124,10 @@ type Phase = "entry" | "shuffle" | "result";
 export default function Page() {
   const [phase, setPhase] = useState<Phase>("entry");
 
-  // Wizard entry (tiny-screen friendly, no scroll)
   const [names, setNames] = useState<string[]>(Array(6).fill(""));
   const [idx, setIdx] = useState(0);
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState("");
 
-  // Slot animation timers
   const [spinning, setSpinning] = useState(false);
   const intervalRef = useRef<number | null>(null);
   const timeoutRef = useRef<number | null>(null);
@@ -151,6 +143,16 @@ export default function Page() {
 
   const currentValue = names[idx] ?? "";
 
+  // IMPORTANT: clean timers
+  function cleanupTimers() {
+    if (intervalRef.current) window.clearInterval(intervalRef.current);
+    if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
+    intervalRef.current = null;
+    timeoutRef.current = null;
+  }
+
+  useEffect(() => cleanupTimers, []);
+
   function setCurrentValue(v: string) {
     setNames((prev) => {
       const next = [...prev];
@@ -158,6 +160,20 @@ export default function Page() {
       return next;
     });
     setError("");
+  }
+
+  function validateAll() {
+    const trimmed = names.map((n) => n.trim());
+    if (trimmed.some((n) => !n)) return "Please fill all 6 names.";
+    const lower = trimmed.map((n) => n.toLowerCase());
+    if (new Set(lower).size !== 6) return "No duplicate names (each must be unique).";
+    return "";
+  }
+
+  function isDuplicateAt(index: number) {
+    const v = names[index]?.trim().toLowerCase();
+    if (!v) return false;
+    return names.some((n, i) => i !== index && n.trim().toLowerCase() === v);
   }
 
   function goPrev() {
@@ -175,30 +191,9 @@ export default function Page() {
     setIdx((p) => clamp(p + 1, 0, 5));
   }
 
-  function validateAll() {
-    const trimmed = names.map((n) => n.trim());
-    if (trimmed.some((n) => !n)) return "Please fill all 6 names.";
-    const lower = trimmed.map((n) => n.toLowerCase());
-    if (new Set(lower).size !== 6) return "No duplicate names (each must be unique).";
-    return "";
-  }
-
-  function isDuplicateAt(index: number) {
-    const v = names[index]?.trim().toLowerCase();
-    if (!v) return false;
-    return names.some((n, i) => i !== index && n.trim().toLowerCase() === v);
-  }
-
-  function cleanupTimers() {
-    if (intervalRef.current) window.clearInterval(intervalRef.current);
-    if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
-    intervalRef.current = null;
-    timeoutRef.current = null;
-  }
-
   function startShuffle() {
-    if (spinning) return; // block double start
-    cleanupTimers(); // kill any old timers first
+    if (spinning) return;
+    cleanupTimers();
 
     const err = validateAll();
     if (err) {
@@ -213,16 +208,13 @@ export default function Page() {
 
     const trimmed = names.map((n) => n.trim());
 
-    // Decide final once
-    const finalShuffled = shuffle(trimmed);
-    const finalTeamA = finalShuffled.slice(0, 3);
-    const finalTeamB = finalShuffled.slice(3, 6);
+    const final = shuffle(trimmed);
+    const finalTeamA = final.slice(0, 3);
+    const finalTeamB = final.slice(3, 6);
     const finalGov: "A" | "B" = Math.random() < 0.5 ? "A" : "B";
 
-    // show immediately (no blank)
     setPreview({ teamA: finalTeamA, teamB: finalTeamB, govTeam: finalGov });
 
-    // spin
     intervalRef.current = window.setInterval(() => {
       const s = shuffle(trimmed);
       setPreview({
@@ -232,18 +224,16 @@ export default function Page() {
       });
     }, 70);
 
-    // stop + reveal
     timeoutRef.current = window.setTimeout(() => {
       cleanupTimers();
       setPreview({ teamA: finalTeamA, teamB: finalTeamB, govTeam: finalGov });
       setSpinning(false);
       setPhase("result");
-    }, 1700);
+    }, 1400);
   }
 
   function reroll() {
     if (spinning) return;
-    cleanupTimers();
     startShuffle();
   }
 
@@ -270,36 +260,28 @@ export default function Page() {
     navigator.clipboard.writeText(text);
   }
 
-  useEffect(() => {
-    return () => cleanupTimers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const govNames =
-    preview && (preview.govTeam === "A" ? preview.teamA : preview.teamB);
-  const oppNames =
-    preview && (preview.govTeam === "A" ? preview.teamB : preview.teamA);
+  const govNames = preview ? (preview.govTeam === "A" ? preview.teamA : preview.teamB) : [];
+  const oppNames = preview ? (preview.govTeam === "A" ? preview.teamB : preview.teamA) : [];
 
   return (
-    // isolate: prevents weird stacking bugs that can block input interaction
-    <main className="isolate h-dvh w-full overflow-hidden bg-[#07060D] text-white">
-      {/* Background: MUST be pointer-events-none */}
+    // ✅ NO vertical scroll app. Always fits.
+    <main className="isolate h-[100svh] w-full overflow-hidden bg-[#07060D] text-white">
+      {/* Background (non-interactive) */}
       <div className="pointer-events-none fixed inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(168,85,247,0.25),transparent_55%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(59,130,246,0.22),transparent_60%)]" />
-        <div className="absolute -left-32 top-20 h-[360px] w-[360px] rounded-full bg-fuchsia-500/20 blur-3xl" />
-        <div className="absolute -right-32 bottom-10 h-[420px] w-[420px] rounded-full bg-indigo-500/20 blur-3xl" />
-        <div className="absolute inset-0 opacity-[0.06] [background-image:linear-gradient(rgba(255,255,255,0.20)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.20)_1px,transparent_1px)] [background-size:28px_28px]" />
-        <div className="absolute inset-0 opacity-[0.08] [background:radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.15),transparent_40%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(168,85,247,0.22),transparent_55%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(59,130,246,0.18),transparent_60%)]" />
+        <div className="absolute -left-28 top-20 h-[300px] w-[300px] rounded-full bg-fuchsia-500/18 blur-3xl" />
+        <div className="absolute -right-28 bottom-10 h-[340px] w-[340px] rounded-full bg-indigo-500/18 blur-3xl" />
+        <div className="absolute inset-0 opacity-[0.05] [background-image:linear-gradient(rgba(255,255,255,0.20)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.20)_1px,transparent_1px)] [background-size:28px_28px]" />
       </div>
 
-      {/* Single-screen app shell */}
-      <div className="relative mx-auto flex h-dvh w-full max-w-xl flex-col px-4 py-4">
-        {/* Top bar */}
+      {/* ✅ safe area padding for notch phones */}
+      <div className="relative mx-auto flex h-full w-full max-w-xl flex-col px-4 pt-[calc(12px+env(safe-area-inset-top))] pb-[calc(12px+env(safe-area-inset-bottom))]">
+        {/* Header (compressed on short height) */}
         <div className="flex items-center justify-between">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-white/80 backdrop-blur-xl">
             <span className="h-2 w-2 rounded-full bg-fuchsia-300/80 shadow-[0_0_18px_rgba(217,70,239,0.45)]" />
-            AP Randomizer • Mobile-first
+            AP Randomizer
           </div>
 
           <button
@@ -310,19 +292,19 @@ export default function Page() {
           </button>
         </div>
 
-        {/* Title */}
-        <div className="mt-3">
-          <h1 className="text-[20px] font-semibold tracking-tight">
+        {/* Title (auto-collapses on short height) */}
+        <div className="mt-3 [@media(max-height:720px)]:mt-2">
+          <h1 className="text-[20px] font-semibold tracking-tight [@media(max-height:720px)]:text-[18px]">
             Futuristic Debate Team Generator
           </h1>
-          <p className="mt-1 text-[12px] text-white/65">
-            Zero scroll • Tiny-screen friendly • Slot-style shuffle
+          <p className="mt-1 text-[12px] text-white/65 [@media(max-height:720px)]:hidden">
+            No vertical scroll • Always fits
           </p>
         </div>
 
-        {/* Main content */}
-        <div className="mt-4 flex flex-1 flex-col gap-3">
-          <GlassPanel className="flex-1">
+        {/* Main panel uses remaining height */}
+        <div className="mt-4 flex-1 min-h-0 [@media(max-height:720px)]:mt-3">
+          <GlassPanel className="h-full p-4 [@media(max-height:720px)]:p-3">
             <AnimatePresence mode="wait">
               {phase === "entry" ? (
                 <motion.div
@@ -331,17 +313,18 @@ export default function Page() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
-                  className="flex h-full flex-col"
+                  className="flex h-full min-h-0 flex-col"
                 >
-                  {/* Progress */}
+                  {/* Top row */}
                   <div className="flex items-center justify-between">
                     <div className="text-sm font-medium text-white/90">
-                      Enter debater {idx + 1} of 6
+                      Debater {idx + 1}/6
                     </div>
-                    <div className="text-[11px] text-white/60">{filledCount}/6 filled</div>
+                    <div className="text-[11px] text-white/60">{filledCount}/6</div>
                   </div>
 
-                  <div className="mt-3 flex items-center gap-2">
+                  {/* progress (small) */}
+                  <div className="mt-2 flex items-center gap-2">
                     {Array.from({ length: 6 }).map((_, i) => (
                       <div
                         key={i}
@@ -353,41 +336,34 @@ export default function Page() {
                     ))}
                   </div>
 
-                  {/* Entered preview (tap to edit) */}
-                  <div className="mt-4">
-                    <div className="mb-2 text-[12px] text-white/65">Entered</div>
-                    <div className="grid grid-cols-3 gap-2">
-                      {names.map((n, i) => {
-                        const filled = n.trim().length > 0;
-                        return (
-                          <button
-                            key={i}
-                            onClick={() => setIdx(i)}
-                            className={cn(
-                              "rounded-2xl border px-3 py-2 text-left text-[12px] backdrop-blur-xl transition",
-                              i === idx
-                                ? "border-white/25 bg-white/10"
-                                : "border-white/10 bg-white/[0.06] hover:bg-white/10"
-                            )}
-                          >
-                            <div className="text-[10px] text-white/50">#{i + 1}</div>
-                            <div
-                              className={cn(
-                                "mt-0.5 font-medium",
-                                filled ? "text-white/90" : "text-white/35"
-                              )}
-                            >
-                              {filled ? (n.length > 12 ? n.slice(0, 12) + "…" : n) : "Empty"}
-                            </div>
-                          </button>
-                        );
-                      })}
+                  {/* ✅ Name preview becomes HORIZONTAL strip (never increases height) */}
+                  <div className="mt-3">
+                    <div className="mb-2 text-[12px] text-white/65 [@media(max-height:720px)]:mb-1">
+                      Entered
+                    </div>
+                    <div
+                      className={cn(
+                        "flex gap-2 overflow-x-auto pb-1",
+                        "[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                      )}
+                    >
+                      {names.map((n, i) => (
+                        <MiniChip
+                          key={i}
+                          active={i === idx}
+                          subtitle={`#${i + 1}`}
+                          title={n.trim() ? (n.length > 14 ? n.slice(0, 14) + "…" : n) : ""}
+                          onClick={() => setIdx(i)}
+                        />
+                      ))}
                     </div>
                   </div>
 
                   {/* Input */}
-                  <div className="mt-5">
-                    <div className="mb-2 text-[12px] text-white/70">Name</div>
+                  <div className="mt-3 relative z-50">
+                    <div className="mb-2 text-[12px] text-white/70 [@media(max-height:720px)]:mb-1">
+                      Name
+                    </div>
                     <input
                       value={currentValue}
                       onChange={(e) => setCurrentValue(e.target.value)}
@@ -398,128 +374,130 @@ export default function Page() {
                       className={cn(
                         "w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-4 text-[15px]",
                         "outline-none backdrop-blur-xl placeholder:text-white/30",
-                        "focus:border-white/25 focus:bg-white/[0.08]"
+                        "focus:border-white/25 focus:bg-white/[0.08]",
+                        "[@media(max-height:720px)]:py-3"
                       )}
                     />
 
-                    <div className="mt-2 text-[11px] text-white/50">
+                    <div className="mt-2 text-[11px] text-white/50 [@media(max-height:720px)]:hidden">
                       Tip: no duplicates — each name must be unique.
                     </div>
 
                     {isDuplicateAt(idx) ? (
                       <div className="mt-2 text-[12px] text-white/80">
-                        ⚠️ This name is already used. Pick a different one.
+                        ⚠️ This name is already used.
                       </div>
                     ) : null}
 
-                    <AnimatePresence>
-                      {error ? (
-                        <motion.div
-                          initial={{ opacity: 0, y: -6 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -6 }}
-                          className="mt-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-[12px] text-white/80"
-                        >
-                          ⚠️ {error}
-                        </motion.div>
-                      ) : null}
-                    </AnimatePresence>
+                    {error ? (
+                      <div className="mt-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-[12px] text-white/80">
+                        ⚠️ {error}
+                      </div>
+                    ) : null}
                   </div>
 
-                  {/* Wizard buttons */}
-                  <div className="mt-auto flex items-center gap-2 pt-5">
-                    <button
-                      onClick={goPrev}
-                      disabled={idx === 0}
-                      className={cn(
-                        "w-24 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm",
-                        "backdrop-blur-xl hover:bg-white/10 active:scale-[0.99]",
-                        "disabled:opacity-40 disabled:cursor-not-allowed"
-                      )}
-                    >
-                      Back
-                    </button>
+                  {/* Buttons (only set, no duplicate bottom bar) */}
+                  <div className="mt-auto pt-3">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={goPrev}
+                        disabled={idx === 0}
+                        className={cn(
+                          "w-24 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm",
+                          "backdrop-blur-xl hover:bg-white/10 active:scale-[0.99]",
+                          "disabled:opacity-40 disabled:cursor-not-allowed",
+                          "[@media(max-height:720px)]:py-2.5"
+                        )}
+                      >
+                        Back
+                      </button>
 
-                    {idx < 5 ? (
-                      <button
-                        onClick={goNext}
-                        className={cn(
-                          "flex-1 rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-medium",
-                          "backdrop-blur-xl hover:bg-white/15 active:scale-[0.99]"
-                        )}
-                      >
-                        Next
-                      </button>
-                    ) : (
-                      <button
-                        onClick={startShuffle}
-                        disabled={!canStart}
-                        className={cn(
-                          "flex-1 rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-semibold",
-                          "backdrop-blur-xl hover:bg-white/15 active:scale-[0.99]",
-                          "disabled:opacity-40 disabled:cursor-not-allowed"
-                        )}
-                      >
-                        Start Shuffle
-                      </button>
-                    )}
+                      {idx < 5 ? (
+                        <button
+                          onClick={goNext}
+                          className={cn(
+                            "flex-1 rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-medium",
+                            "backdrop-blur-xl hover:bg-white/15 active:scale-[0.99]",
+                            "[@media(max-height:720px)]:py-2.5"
+                          )}
+                        >
+                          Next
+                        </button>
+                      ) : (
+                        <button
+                          onClick={startShuffle}
+                          disabled={!canStart}
+                          className={cn(
+                            "flex-1 rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-semibold",
+                            "backdrop-blur-xl hover:bg-white/15 active:scale-[0.99]",
+                            "disabled:opacity-40 disabled:cursor-not-allowed",
+                            "[@media(max-height:720px)]:py-2.5"
+                          )}
+                        >
+                          Start Shuffle
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </motion.div>
               ) : (
                 <motion.div
-                  key="slots"
+                  key="result"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
-                  className="flex h-full flex-col"
+                  className="flex h-full min-h-0 flex-col"
                 >
                   <div className="flex items-center justify-between">
                     <div className="text-sm font-medium text-white/90">
-                      {phase === "shuffle" ? "Shuffling teams…" : "Results"}
+                      {phase === "shuffle" ? "Shuffling…" : "Results"}
                     </div>
-                    <div className="text-[11px] text-white/60">
-                      {phase === "shuffle" ? "casino mode" : "locked"}
-                    </div>
+                    <div className="text-[11px] text-white/60">{spinning ? "casino mode" : "locked"}</div>
                   </div>
 
-                  {/* Slot grid */}
-                  <div className="mt-4 grid grid-cols-1 gap-3">
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 backdrop-blur-xl">
-                      <div className="mb-2 flex items-center justify-between">
-                        <div className="text-[12px] font-semibold text-white/85">
-                          Team A
-                        </div>
-                        <div className="text-[11px] text-white/55">
-                          {preview?.govTeam === "A" ? "Government" : "Opposition"}
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 gap-2">
-                        <SlotReel label="A1" value={preview?.teamA?.[0] ?? "—"} spinning={spinning} />
-                        <SlotReel label="A2" value={preview?.teamA?.[1] ?? "—"} spinning={spinning} />
-                        <SlotReel label="A3" value={preview?.teamA?.[2] ?? "—"} spinning={spinning} />
-                      </div>
-                    </div>
+                  <div className="mt-3 grid min-h-0 flex-1 grid-cols-1 gap-3">
+                    <SlotCard
+                      title="Team A"
+                      role={preview?.govTeam === "A" ? "Government" : "Opposition"}
+                      names={preview?.teamA ?? ["—", "—", "—"]}
+                      spinning={spinning}
+                    />
+                    <SlotCard
+                      title="Team B"
+                      role={preview?.govTeam === "B" ? "Government" : "Opposition"}
+                      names={preview?.teamB ?? ["—", "—", "—"]}
+                      spinning={spinning}
+                    />
 
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 backdrop-blur-xl">
-                      <div className="mb-2 flex items-center justify-between">
-                        <div className="text-[12px] font-semibold text-white/85">
-                          Team B
+                    {/* On short height hide the extra summary pills automatically */}
+                    {phase === "result" ? (
+                      <div className="grid grid-cols-2 gap-2 [@media(max-height:720px)]:hidden">
+                        <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+                          <div className="text-[11px] font-semibold text-white/75">Government</div>
+                          <div className="mt-2 space-y-1.5">
+                            {govNames.map((n, i) => (
+                              <div key={i} className="rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-[12px] text-white/85">
+                                {n}
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                        <div className="text-[11px] text-white/55">
-                          {preview?.govTeam === "B" ? "Government" : "Opposition"}
+                        <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+                          <div className="text-[11px] font-semibold text-white/75">Opposition</div>
+                          <div className="mt-2 space-y-1.5">
+                            {oppNames.map((n, i) => (
+                              <div key={i} className="rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-[12px] text-white/85">
+                                {n}
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
-                      <div className="grid grid-cols-1 gap-2">
-                        <SlotReel label="B1" value={preview?.teamB?.[0] ?? "—"} spinning={spinning} />
-                        <SlotReel label="B2" value={preview?.teamB?.[1] ?? "—"} spinning={spinning} />
-                        <SlotReel label="B3" value={preview?.teamB?.[2] ?? "—"} spinning={spinning} />
-                      </div>
-                    </div>
+                    ) : null}
                   </div>
 
-                  {/* Actions */}
-                  <div className="mt-auto pt-4">
+                  <div className="mt-auto pt-3">
                     <div className="flex gap-2">
                       <button
                         onClick={reroll}
@@ -527,7 +505,8 @@ export default function Page() {
                         className={cn(
                           "flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium",
                           "backdrop-blur-xl hover:bg-white/10 active:scale-[0.99]",
-                          "disabled:opacity-40 disabled:cursor-not-allowed"
+                          "disabled:opacity-40 disabled:cursor-not-allowed",
+                          "[@media(max-height:720px)]:py-2.5"
                         )}
                       >
                         Re-roll
@@ -539,49 +518,18 @@ export default function Page() {
                         className={cn(
                           "flex-1 rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-semibold",
                           "backdrop-blur-xl hover:bg-white/15 active:scale-[0.99]",
-                          "disabled:opacity-40 disabled:cursor-not-allowed"
+                          "disabled:opacity-40 disabled:cursor-not-allowed",
+                          "[@media(max-height:720px)]:py-2.5"
                         )}
                       >
                         Copy
                       </button>
                     </div>
-
-                    {phase === "result" && preview ? (
-                      <div className="mt-3 grid grid-cols-2 gap-2">
-                        <Pill title="Government" items={govNames ?? []} />
-                        <Pill title="Opposition" items={oppNames ?? []} />
-                      </div>
-                    ) : null}
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
           </GlassPanel>
-
-          {/* Bottom Start bar */}
-          <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3 backdrop-blur-xl">
-            <div className="flex items-center justify-between">
-              <div className="text-[12px] text-white/70">
-                {phase === "entry"
-                  ? "Complete all 6 names to shuffle."
-                  : phase === "shuffle"
-                    ? "Spinning…"
-                    : "Tap Re-roll for another random."}
-              </div>
-
-              <button
-                onClick={startShuffle}
-                disabled={!canStart}
-                className={cn(
-                  "rounded-2xl px-4 py-2.5 text-sm font-semibold transition",
-                  "border border-white/10 bg-white/10 hover:bg-white/15 active:scale-[0.99]",
-                  "disabled:opacity-40 disabled:cursor-not-allowed"
-                )}
-              >
-                Start
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </main>
